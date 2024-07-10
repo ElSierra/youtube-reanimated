@@ -1,237 +1,66 @@
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  useWindowDimensions,
-  View,
-} from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { useState } from 'react';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   cancelAnimation,
-  interpolate,
-  interpolateColor,
-  useAnimatedReaction,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
-  withRepeat,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
-import { FontAwesome6, Ionicons } from '@expo/vector-icons';
+
+import { Animation } from './animation';
 
 const App = () => {
-  const { width: screenWidth } = useWindowDimensions();
-  console.log('🚀 ~ file: index.tsx:23 ~ App ~ screenWidth:', screenWidth);
-
-  const width = useSharedValue(0);
-  const opacityInitalBar = useSharedValue(1);
-  const translateX = useSharedValue(0);
-
-
-  const OpacityForBar = useSharedValue(1);
-  const innerRedWidth = useSharedValue(0);
-  const scaleX = useSharedValue(1);
-  const stylesForBar = useAnimatedStyle(() => {
+  const [play, setPlay] = useState(false);
+  const rotate = useSharedValue('0deg');
+  const rotateAnimation = useAnimatedStyle(() => {
     return {
-      width: width.value,
-      backgroundColor: interpolateColor(
-        width.value,
-        [0, screenWidth / 2],
-        ['green', 'red'],
-      ),
-      opacity: opacityInitalBar.value,
-    };
-  });
-
-  useAnimatedReaction(
-    () => {
-      return width;
-    },
-    prev => {
-      if (opacityInitalBar.value === 1) {
-        cancelAnimation(opacityInitalBar);
-        prev.value = withTiming(
-          screenWidth / 2,
-          { duration: 5000 },
-          (finished, current) => {
-            console.log(finished);
-            if (finished) {
-              opacityInitalBar.value = withTiming(0);
-            }
-          },
-        );
-      }
-    },
-    [opacityInitalBar.value],
-  );
-
-  const opacityForPlayBar = useDerivedValue(() => {
-    if (width.value === screenWidth / 2) {
-      return withTiming(1);
-    }
-    return withTiming(0);
-  }, []);
-
-  useAnimatedReaction(
-    () => {
-      return opacityForPlayBar;
-    },
-    () => {
-      if (opacityForPlayBar.value === 1) {
-        innerRedWidth.value = withTiming(screenWidth / 1.5);
-        scaleX.value = withTiming(1.2);
-      }
-    },
-  );
-
-  const forPlayerStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          scale: opacityForPlayBar.value,
-        },
-        { scaleX: scaleX.value },
-      ],
-    };
-  }, [OpacityForBar.value]);
-
-  const forInnerPlayerStyle = useAnimatedStyle(() => {
-    return {
-      width: innerRedWidth.value,
+      transform: [{ rotate: rotate.value }],
     };
   }, []);
-
-  useAnimatedReaction(
-    () => innerRedWidth.value,
-    curr => {
-      console.log('ccurr', curr);
-      if (curr === screenWidth / 1.5) {
-        console.log('true');
-        OpacityForBar.value = withTiming(0, { duration: 1000 }, () => {
-          console.log('done');
-          translateX.value = withTiming(screenWidth / 2 - 68);
-        });
-      }
-    },
-  );
-
-  const animStyleForRedWrapper = useAnimatedStyle(() => {
-    return {
-      opacity: OpacityForBar.value,
-    };
-  });
-
-  const animIconStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: translateX.value }],
-    };
-  });
-
-  const redBox = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          translateX: interpolate(
-            translateX.value,
-            [0, screenWidth / 2 - 68],
-            [-100, screenWidth / 2 - 10],
-          ),
-        },
-      ],
-    };
-  });
-
-
   return (
     <View style={[styles.container]}>
-      <StatusBar style="auto" />
+      {play && <Animation />}
 
       <View
         style={{
-          width: screenWidth / 1.5 + 24,
-          height: '100%',
+          bottom: 40,
+          left: 0,
+          right: 0,
+          width: '100%',
+          position: 'absolute',
+
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <Animated.View
-          style={[
-            {
-              position: 'absolute',
-              backgroundColor: 'red',
-              height: 80,
-              width: 100,
-              left: -100,
-              borderRadius: 20,
-            },
-            redBox,
-          ]}
-        />
-        <Animated.View
-          style={[
-            {
-              justifyContent: 'center',
-              alignItems: 'center',
-              flexDirection: 'row',
-              gap: 4,
-              height: 100,
-            },
-            forPlayerStyle,
-          ]}>
-          <Animated.View style={animIconStyle}>
-            <FontAwesome6 name="play" size={24} color="white" />
-          </Animated.View>
-          <Animated.View
-            style={[
-              {
-                width: screenWidth / 1.5,
-                height: 6,
-                borderRadius: 999,
-                backgroundColor: '#E9E9E9',
-                overflow: 'hidden',
-              },
-              animStyleForRedWrapper,
-            ]}>
-            <Animated.View
-              style={[
-                {
-                  width: 0,
-                  height: '100%',
-                  backgroundColor: 'red',
-                },
-                forInnerPlayerStyle,
-              ]}
-            />
-          </Animated.View>
-        </Animated.View>
-        <Animated.View
-          style={[
-            {
-              height: 6,
-              marginLeft: 24,
-              position: 'absolute',
-              zIndex: 999,
-              borderRadius: 9999,
-            },
-            stylesForBar,
-          ]}
-        />
-
-        {/* <TouchableOpacity
+        <TouchableOpacity
           onPress={() => {
-            opacityInitalBar.value = 1;
-            translateX.value = 0;
+            setPlay(false);
+            cancelAnimation(rotate);
+            rotate.value = withSpring('360deg', undefined, () => {
+              rotate.value = '0deg';
+            });
 
-            animation.value = false;
-
-            OpacityForBar.value = 1;
-            innerRedWidth.value = 0;
-            scaleX.value = 1;
+            setTimeout(() => {
+              setPlay(true);
+            }, 100);
           }}
-          style={{ position: 'absolute', bottom: 0, padding: 20 }}>
-          <Ionicons name="refresh-circle-sharp" size={30} color="white" />
-        </TouchableOpacity> */}
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 8,
+            flexDirection: 'row',
+
+            backgroundColor: 'red',
+            borderRadius: 20,
+            gap: 2,
+          }}>
+          <Animated.View style={rotateAnimation}>
+            <Ionicons name="refresh-circle-sharp" size={30} color="white" />
+          </Animated.View>
+          <Text style={{ color: 'white' }}>Play Animation</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -241,9 +70,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#292929',
-    alignItems: 'center',
-
     justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 
