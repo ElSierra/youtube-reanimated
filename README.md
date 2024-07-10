@@ -4,7 +4,7 @@ This project demonstrates an animation created using [Reanimated](https://docs.s
 
 ## Preview
 
-![Animation Preview](/animation.gif)
+<img src="animation.gif" alt="Animation Preview" width="50%" />
 
 ## Installation
 
